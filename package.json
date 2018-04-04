@@ -1,0 +1,25 @@
+{
+  "name": "pubsub",
+  "version": "0.0.0",
+  "description": "pubsub",
+  "main": "index.js",
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peers-for-peers/pubsub.git"
+  },
+  "keywords": [
+    "pubsub"
+  ],
+  "author": "peer-for-peers, xuset, georgeaf99",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/peers-for-peers/pubsub/issues"
+  },
+  "homepage": "https://github.com/peers-for-peers/pubsub#readme",
+  "devDependencies": {
+    "standard": "^11.0.1"
+  }
+}
