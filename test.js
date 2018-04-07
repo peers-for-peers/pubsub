@@ -1,15 +1,17 @@
-window.localStorage.debug = 'pubsub*'
+window.localStorage.debug = 'pubsub'
 
 var PubSub = require('.')
 var test = require('tape')
+
+var opts = {socketioUrl: '//localhost:3000'}
 
 test('sanity', function (t) {
   t.timeoutAfter(3000)
   t.plan(2)
 
   var topic = 'cats'
-  var ps1 = new PubSub(topic)
-  var ps2 = new PubSub(topic)
+  var ps1 = new PubSub(topic, opts)
+  var ps2 = new PubSub(topic, opts)
 
   ps1.on('message', function (message) {
     t.equal(message, 'foo')
