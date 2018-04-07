@@ -4,7 +4,8 @@
   "description": "pubsub",
   "main": "index.js",
   "scripts": {
-    "test": "standard"
+    "test": "standard",
+    "bundle": "browserify -d -r . -s PubSub > bundle.js"
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,16 @@
   },
   "homepage": "https://github.com/peers-for-peers/pubsub#readme",
   "devDependencies": {
-    "standard": "^11.0.1"
+    "browserify": "^16.1.1",
+    "standard": "^11.0.1",
+    "uglify-js": "^3.3.18"
+  },
+  "dependencies": {
+    "debug": "^3.1.0",
+    "express": "^4.16.3",
+    "inherits": "^2.0.3",
+    "simple-peer": "^9.0.0",
+    "socket.io": "^2.1.0",
+    "socket.io-client": "^2.1.0"
   }
 }
