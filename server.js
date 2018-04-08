@@ -1,51 +1,63 @@
+module.exports.start = start
+
 var express = require('express')
-var app = express()
-var http = require('http').Server(app)
-var io = require('socket.io')(http)
-var path = require('path')
+var HttpServer = require('http').Server
+var SocketIO = require('socket.io')
+var process = require('process')
+var debug = require('debug')('pubsub')
+var port = process.env.PORT ? Number(process.env.PORT) : 3000
 
-app.use(express.static('.'))
+function start (httpServer) {
+  if (httpServer == null) {
+    var app = express()
+    httpServer = HttpServer(app)
+    app.use(express.static('.'))
+    httpServer.listen(port, function () {
+      console.log('listening on *:' + port)
+    })
+  }
+  var io = SocketIO(httpServer)
+  io.on('connection', onConnection.bind(null, io))
+}
 
-app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, '/index.html'))
-})
-
-io.on('connection', function (socket) {
-  console.log('a user connected')
+function onConnection (io, socket) {
+  debug('CONNECT')
 
   socket.on('disconnect', function () {
-    console.log('user disconnected')
+    debug('DISCONNECT')
   })
 
   socket.on('join-req', function (msg) {
-    socket.peerId = msg.id
+    socket.peerID = msg.id
+
+    debug('JOIN', 'id=' + msg.id, 'topic=' + msg.topic)
 
     socket.join(msg.topic)
     io.in(msg.topic).clients((err, socketIDs) => {
       var idList = []
       if (err) {
-        console.log('Error in io.clients()', err)
+        debug('ERROR', 'in io.clients()', err)
       } else {
-        idList = socketIDs.filter(sid => sid !== socket.id).map(sid => io.sockets.connected[sid].peerId)
+        idList = socketIDs.filter(sid => sid !== socket.id).map(sid => io.sockets.connected[sid].peerID)
       }
       var rsp = {}
       rsp[msg.topic] = idList
-      console.log('DISCOVER', rsp)
+      debug('DISCOVERED', rsp)
       socket.emit('join-rsp', rsp)
     })
   })
 
   socket.on('relay', function (msg) {
-    var recipientID = Object.keys(io.sockets.connected).find(sId => io.sockets.connected[sId].peerId === msg.to)
+    var recipientID = Object.keys(io.sockets.connected).find(sId => io.sockets.connected[sId].peerID === msg.to)
     if (recipientID != null) {
-      console.log(`RELAY from=${msg.from} to=${msg.to}`)
+      debug('RELAY', 'to=' + msg.to, 'from=' + msg.from)
       io.sockets.connected[recipientID].emit('relay', msg)
     } else {
-      console.log('Failed to find peer to relay msg to')
+      debug('WARN', 'Failed to find peer to relay msg to', 'to=' + msg.to, 'from=' + msg.from)
     }
   })
-})
+}
 
-http.listen(3000, function () {
-  console.log('listening on *:3000')
-})
+if (require.main === module) {
+  start()
+}
