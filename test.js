@@ -3,7 +3,7 @@ window.localStorage.debug = 'pubsub'
 var PubSub = require('.')
 var test = require('tape')
 
-var opts = {socketioUrl: '//localhost:3000'}
+var opts = {Connector: PubSub.LocalConnector}
 
 test('sanity', function (t) {
   t.timeoutAfter(3000)
