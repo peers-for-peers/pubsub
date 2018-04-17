@@ -3,7 +3,11 @@ window.localStorage.debug = 'pubsub'
 var PubSub = require('.')
 var test = require('tape')
 
+// For using a fake signalling server that runs in the browser
 var opts = {Connector: PubSub.LocalConnector}
+
+// For connecting to the socketio signalling server
+// var opts = {socketioUrl: '//localhost:3000'}
 
 test('sanity', function (t) {
   t.timeoutAfter(3000)
