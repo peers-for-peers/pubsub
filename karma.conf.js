@@ -1,3 +1,5 @@
+var server = require('./server')
+
 module.exports = function (config) {
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -5,7 +7,7 @@ module.exports = function (config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['tap', 'browserify'],
+    frameworks: ['tap', 'browserify', 'signal'],
 
     // list of files / patterns to load in the browser
     files: [
@@ -60,6 +62,14 @@ module.exports = function (config) {
     // how many browser should be started simultaneous
     concurrency: Infinity,
 
+    plugins: [
+      'karma-browserify',
+      'karma-chrome-launcher',
+      'karma-firefox-launcher',
+      'karma-tap',
+      {'framework:signal': ['factory', startSignallingServer]}
+    ],
+
     sauceLabs: {
       testName: 'idb-kv-store'
     },
@@ -91,4 +101,8 @@ module.exports = function (config) {
       }
     }
   })
+}
+
+function startSignallingServer () {
+  server.start()
 }
