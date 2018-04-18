@@ -24,6 +24,8 @@ describe('pubsub', function () {
 
     ps2.on('message', function (message) {
       assert.equal(message, 'bar')
+      ps1.destroy()
+      ps2.destroy()
       done()
     })
 
