@@ -7,7 +7,7 @@ module.exports = function (config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['tap', 'browserify', 'signal'],
+    frameworks: ['mocha', 'browserify', 'signal'],
 
     // list of files / patterns to load in the browser
     files: [
@@ -66,7 +66,7 @@ module.exports = function (config) {
       'karma-browserify',
       'karma-chrome-launcher',
       'karma-firefox-launcher',
-      'karma-tap',
+      'karma-mocha',
       {'framework:signal': ['factory', startSignallingServer]}
     ],
 
