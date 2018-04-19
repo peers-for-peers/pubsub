@@ -32,6 +32,47 @@ describe('pubsub', function () {
     ps2.publish('foo')
   })
 
+  it('3rd peer joins late', function (done) {
+    var topic = Math.random().toString(16).substr(2)
+    var ps1 = new PubSub(topic, opts)
+    var ps2 = new PubSub(topic, opts)
+    var ps3
+
+    var messageCount = 0
+
+    ps1.on('message', function (message) {
+      assert.equal(message, 'foo')
+      messageCount++
+      ps3 = new PubSub(topic, opts)
+
+      ps3.on('message', function (message) {
+        assert(message === 'bar' || message === 'foo')
+        messageCount++
+        if (messageCount === 4) finish()
+      })
+
+      ps3.once('peer-connect', function (peerID) {
+        assert(peerID === ps1.peerID || peerID === ps2.peerID)
+        ps1.publish('bar')
+      })
+    })
+
+    ps2.on('message', function (message) {
+      assert.equal(message, 'bar')
+      messageCount++
+      if (messageCount === 4) finish()
+    })
+
+    ps2.publish('foo')
+
+    function finish () {
+      ps1.destroy()
+      ps2.destroy()
+      ps3.destroy()
+      done()
+    }
+  })
+
   it('id.distance', function () {
     var max = PubSub.id.ID_MAX.toString(PubSub.id.ID_BASE)
     var maxMinusOne = PubSub.id.ID_MAX.minus(1).toString(PubSub.id.ID_BASE)
