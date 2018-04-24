@@ -2,81 +2,95 @@
 
 // Enable debug logging for pubsub with color logging disabled
 window.localStorage.debug = 'pubsub'
-require('debug').useColors = function () { return false }
+require('debug').useColors = () => false
 
-var assert = require('assert')
-var PubSub = require('.')
+const assert = require('assert')
+const PubSub = require('.')
 
-var opts = {socketioUrl: '//:3000'}
+const opts = { socketioUrl: '//:3000' }
 
 describe('pubsub', function () {
   this.timeout(3000)
 
+  // ps2 -(foo)-> ps1
+  // ps1 -(bar)-> ps2
   it('sanity', function (done) {
-    var topic = Math.random().toString(16).substr(2)
-    var ps1 = new PubSub(topic, opts)
-    var ps2 = new PubSub(topic, opts)
+    const topic = Math.random().toString(16).substr(2)
+    let ps1 = new PubSub(topic, opts)
+    let ps2 = new PubSub(topic, opts)
 
-    ps1.on('message', function (message) {
+    const finish = () => {
+      ps1.destroy()
+      ps2.destroy()
+      done()
+    }
+
+    ps1.on('message', (message) => {
       assert.equal(message, 'foo')
       ps1.publish('bar')
     })
 
-    ps2.on('message', function (message) {
+    ps2.on('message', (message) => {
       assert.equal(message, 'bar')
-      ps1.destroy()
-      ps2.destroy()
-      done()
+      finish()
     })
 
     ps2.publish('foo')
   })
 
+  // ps2 -(foo)-> ps1
+  // ps3 connects
+  // ps1 -(bar)-> ps2, ps3 OR ps2->(foo)->ps3
   it('3rd peer joins late', function (done) {
-    var topic = Math.random().toString(16).substr(2)
-    var ps1 = new PubSub(topic, opts)
-    var ps2 = new PubSub(topic, opts)
-    var ps3
+    const topic = Math.random().toString(16).substr(2)
+    let ps1 = new PubSub(topic, opts)
+    let ps2 = new PubSub(topic, opts)
+    let ps3 = null
 
-    var messageCount = 0
+    let messageCount = 0
+
+    const finish = () => {
+      ps1.destroy()
+      ps2.destroy()
+      ps3.destroy()
+      done()
+    }
 
     ps1.on('message', function (message) {
       assert.equal(message, 'foo')
       messageCount++
+
       ps3 = new PubSub(topic, opts)
 
-      ps3.on('message', function (message) {
+      ps3.on('message', (message) => {
         assert(message === 'bar' || message === 'foo')
         messageCount++
         if (messageCount === 4) finish()
       })
 
-      ps3.once('peer-connect', function (peerID) {
+      ps3.once('peer-connect', (peerID) => {
         assert(peerID === ps1.peerID || peerID === ps2.peerID)
         ps1.publish('bar')
       })
     })
 
-    ps2.on('message', function (message) {
+    ps2.on('message', (message) => {
       assert.equal(message, 'bar')
       messageCount++
       if (messageCount === 4) finish()
     })
 
     ps2.publish('foo')
-
-    function finish () {
-      ps1.destroy()
-      ps2.destroy()
-      ps3.destroy()
-      done()
-    }
   })
+})
+
+describe('id', function () {
+  this.timeout(100)
 
   it('id.distance', function () {
-    var max = PubSub.id.ID_MAX.toString(PubSub.id.ID_BASE)
-    var maxMinusOne = PubSub.id.ID_MAX.minus(1).toString(PubSub.id.ID_BASE)
-    var maxHalf = PubSub.id.ID_MAX.divide(2).toString(PubSub.id.ID_BASE)
+    const max = PubSub.id.ID_MAX.toString(PubSub.id.ID_BASE)
+    const maxMinusOne = PubSub.id.ID_MAX.minus(1).toString(PubSub.id.ID_BASE)
+    const maxHalf = PubSub.id.ID_MAX.divide(2).toString(PubSub.id.ID_BASE)
 
     assert.equal(PubSub.id.distance('0', '0').valueOf(), 0)
     assert.equal(PubSub.id.distance('0', '1').valueOf(), 1)
@@ -89,9 +103,9 @@ describe('pubsub', function () {
   })
 
   it('id.distanceComparator', function () {
-    var max = PubSub.id.ID_MAX.toString(PubSub.id.ID_BASE)
-    var maxMinusOne = PubSub.id.ID_MAX.minus(1).toString(PubSub.id.ID_BASE)
-    var idList = ['0', '2', max]
+    const max = PubSub.id.ID_MAX.toString(PubSub.id.ID_BASE)
+    const maxMinusOne = PubSub.id.ID_MAX.minus(1).toString(PubSub.id.ID_BASE)
+    const idList = ['0', '2', max]
 
     idList.sort(PubSub.id.distanceComparator.bind(null, '3'))
     assert.deepEqual(idList, ['2', '0', max])
