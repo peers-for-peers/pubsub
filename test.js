@@ -38,6 +38,27 @@ describe('pubsub', function () {
     ps2.publish('foo')
   })
 
+  it('peer joins late', function (done) {
+    const topic = Math.random().toString(16).substr(2)
+    let ps1 = new PubSub(topic, opts)
+    let ps2 = null
+
+    const finish = () => {
+      ps1.destroy()
+      ps2.destroy()
+      done()
+    }
+
+    ps1.publish('bar')
+
+    ps2 = new PubSub(topic, opts)
+
+    ps2.on('message', (message) => {
+      assert(message === 'bar')
+      finish()
+    })
+  })
+
   // ps2 -(foo)-> ps1
   // ps3 connects
   // ps1 -(bar)-> ps2, ps3 OR ps2->(foo)->ps3
@@ -56,7 +77,7 @@ describe('pubsub', function () {
       done()
     }
 
-    ps1.on('message', function (message) {
+    ps1.on('message', (message) => {
       assert.equal(message, 'foo')
       messageCount++
 
